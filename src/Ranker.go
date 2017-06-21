@@ -49,7 +49,6 @@ func main() {
 
 	for _, target := range r.Targets {
 		d, err := publicsuffix.EffectiveTLDPlusOne(target.Host)
-		fmt.Println(d)
 
 		if err != nil {
 			fmt.Println(err)
