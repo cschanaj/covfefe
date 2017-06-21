@@ -15,7 +15,7 @@ import (
 func main() {
 	if len(os.Args) != 3 {
 		fmt.Printf("Usage: %s <top-1m.csv> <Example.com.xml>\n", os.Args[0])
-		os.Exit(-1)
+		os.Exit(0)
 	}
 
 	file, err := os.Open(os.Args[1])
@@ -25,7 +25,7 @@ func main() {
 
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(-1)
+		os.Exit(0)
 	}
 
 	dmap := make(map[string]int)
@@ -37,7 +37,7 @@ func main() {
 			break
 		} else if err != nil {
 			fmt.Println(err)
-			os.Exit(-1)
+			os.Exit(0)
 		}
 
 		dmap[record[1]] = i
