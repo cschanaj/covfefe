@@ -2,6 +2,7 @@ package main
 
 import (
 	ruleset "./httpse-lib"
+	publicsuffix "golang.org/x/net/publicsuffix"
 
 	"encoding/csv"
 	"encoding/xml"
@@ -47,7 +48,14 @@ func main() {
 	xml.Unmarshal(xmlFile, &r)
 
 	for _, target := range r.Targets {
-		if val, ok := dmap[target.Host]; ok {
+		d, err := publicsuffix.EffectiveTLDPlusOne(target.Host)
+		fmt.Println(d)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		if val, ok := dmap[d]; ok {
 			os.Exit(val)
 		}
 	}
