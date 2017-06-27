@@ -103,7 +103,7 @@ func main() {
 	xpmap := mapToSortedPairList(pmap)
 
 	// version, commit, total, (default_off, #), (platform, #)
-	fmt.Printf("| %d | %d, %d | %d, %d |\n", total, cpf, len(pmap), cdo, len(xmap))
+	fmt.Printf("| %d | %d, %d | %d, %d |\n", total, cpf, len(xpmap), cdo, len(xdmap))
 
 	for ind, val := range xdmap {
 		if ind > 5 {
