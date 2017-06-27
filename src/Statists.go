@@ -5,11 +5,48 @@ import (
 
 	"encoding/xml"
 	"fmt"
-	"strings"
+	"sort"
 	"io/ioutil"
 	"log"
 	"os"
 )
+
+
+type Pair struct {
+	Key string
+	Val int64
+}
+
+type PairList []Pair
+
+func mapToSortedPairList(mmap map[string]int64) PairList {
+	pl := make(PairList, len(mmap))
+
+	i := 0
+	for k, v := range mmap {
+		pl[i] = Pair{k, v}
+		i++
+	}
+
+	sort.Sort(sort.Reverse(pl))
+	return pl
+}
+
+func (p PairList) Len() int {
+	return len(p)
+}
+
+func (p PairList) Less(i, j int) bool {
+	if p[i].Val == p[j].Val {
+		return p[i].Key < p[j].Key
+	}
+	return p[i].Val < p[j].Val
+}
+
+func (p PairList) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+
 
 func main() {
 	files, err := ioutil.ReadDir(os.Args[1])
@@ -23,12 +60,14 @@ func main() {
 	// default_off count
 	cdo := 0
 
-	cdofrt := 0
+	// platform count
+	cpf := 0
 
-	// mixed content count
-	cmc := 0
+	// default_off 
+	dmap := make(map[string]int64)
 
-	dmap := make(map[string]int)
+	// platform
+	pmap := make(map[string]int64)
 
 	for _, file := range files {
 		xmlFile, err := ioutil.ReadFile(os.Args[1] + "/" + file.Name())
@@ -41,19 +80,44 @@ func main() {
 		xml.Unmarshal(xmlFile, &r)
 
 		if len(r.Default_off) > 0 {
-			cdo = cdo + 1
-
-			dmap[r.Default_off] = 1
-
-			if r.Default_off == "failed ruleset test" {
-				cdofrt = cdofrt + 1
+			if val, exist := dmap[r.Default_off]; exist {
+				dmap[r.Default_off] = val + 1
+			} else {
+				dmap[r.Default_off] = 1
 			}
+			cdo++
 		}
 
-		if len(r.Platform) > 0 && strings.Contains(r.Platform, "mixedcontent") {
-			cmc = cmc + 1
+
+		if len(r.Platform) > 0 {
+			if val, exist := pmap[r.Platform]; exist {
+				pmap[r.Platform] = val + 1
+			} else {
+				pmap[r.Platform] = 1
+			}
+			cpf++
 		}
 	}
 
-	fmt.Printf("| %d | %d | %d | %d | %d |\n", total, cmc, cdo, cdofrt, len(dmap))
+	xdmap := mapToSortedPairList(dmap)
+	xpmap := mapToSortedPairList(pmap)
+
+	// version, commit, total, (default_off, #), (platform, #)
+	fmt.Printf("| %d | %d, %d | %d, %d |\n", total, cpf, len(pmap), cdo, len(xmap))
+
+	for ind, val := range xdmap {
+		if ind > 5 {
+			break
+		}
+		fmt.Printf("| %s, %d ", val.Key, val.Val)
+	}
+	fmt.Printf("|\n")
+
+	for ind, val := range xpmap {
+		if ind > 5 {
+			break
+		}
+		fmt.Printf("| %s, %d ", val.Key, val.Val)
+	}
+	fmt.Printf("|\n")
 }
