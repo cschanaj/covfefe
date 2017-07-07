@@ -25,42 +25,67 @@ func main() {
 	}
 
 	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".xml") == false {
+		// full path of file
+		filename := filepath.Join(os.Args[1], file.Name())
+
+		// extension must be ".xml"
+		if strings.HasSuffix(filename, ".xml") == false {
 			continue
 		}
 
-		xmlFile, err := ioutil.ReadFile(filepath.Join(os.Args[1], file.Name()))
+		xmlFile, err := ioutil.ReadFile(filename)
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			continue
 		}
 
+		// make sure no linked ruleset
 		if strings.Contains(string(xmlFile), ".xml") {
 			continue
 		}
 
+		// parse xml
 		var r ruleset.Ruleset
 		xml.Unmarshal(xmlFile, &r)
 
-		if len(r.Default_off) == 0 && len(r.Platform) == 0 && len(r.Rules) == 1 && len(r.Targets) == 1 {
-			target := r.Targets[0].Host
-			from := r.Rules[0].From
-			to := r.Rules[0].To
+		// no default_off and platform
+		if len(r.Default_off) > 0 || len(r.Platform) > 0 {
+			continue
+		}
+
+		// no exclusion, must rewrite everything
+		if len(r.Exclusions) != 0 {
+			continue
+		}
+
+		// #rule == 1
+		if len(r.Rules) != 1 {
+			continue
+		}
+
+		// #non-wildcard target == 1
+		if len(r.Targets) != 1 || strings.Contains(r.Targets[0].Host, "*") {
+			continue
+		}
 
 
-			if strings.Contains(target, "*") {
-				continue
-			}
+
+		target := r.Targets[0].Host
+		from   := r.Rules[0].From
+		to     := r.Rules[0].To
 
 
-			if from != "^http:" && to == "https://" + target + "/" {
-				re := regexp.MustCompile("<rule from=.*?\r?\n?.*?/>")
-				pxml := re.ReplaceAllString(string(xmlFile), "<rule from=\"^http:\" to=\"https:\" />")
+		trivial_from := "^http://" + regexp.QuoteMeta(target) + "/"
+		trivial_to   := "https://" + target + "/"
 
-				err := ioutil.WriteFile(filepath.Join(os.Args[1], file.Name()), []byte(pxml), 0644)
-				if err != nil {
-					fmt.Println(err)
-				}
+		// apply rewrite to exact match only
+		if from == trivial_from && to == trivial_to {
+			re := regexp.MustCompile("<rule\\s+from=\"[^\"]+\"[\\s\r\n]+to=\"[^\"]+\"\\s+/>")
+			pxml := re.ReplaceAllString(string(xmlFile), "<rule from=\"^http:\" to=\"https:\" />")
+
+			err := ioutil.WriteFile(filepath.Join(os.Args[1], file.Name()), []byte(pxml), 0644)
+			if err != nil {
+				fmt.Println(err)
 			}
 		}
 	}

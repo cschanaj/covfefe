@@ -7,6 +7,7 @@ type Ruleset struct {
 
 	Targets       []Target       `xml:"target"`
 	Rules         []Rule         `xml:"rule"`
+	Exclusions    []Exclusion    `xml:"exclusion"`
 	TestUrls      []TestUrl      `xml:"test"`
 	SecureCookies []SecureCookie `xml:"securecookie"`
 }
@@ -18,6 +19,10 @@ type Target struct {
 type Rule struct {
 	From string `xml:"from,attr"`
 	To   string `xml:"to,attr"`
+}
+
+type Exclusion struct {
+	Pattern string `xml,"pattern,attr"`
 }
 
 type TestUrl struct {
