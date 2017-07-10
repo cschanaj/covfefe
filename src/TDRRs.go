@@ -2,19 +2,21 @@ package main
 
 import (
 	ruleset "./httpse-lib"
+
 	"bytes"
-	"fmt"
-	"regexp"
-	"log"
-	"io/ioutil"
-	"os"
 	"encoding/xml"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"strings"
 )
 
 // generic rule regex
-var grr = "<rule\\s+from=\"[^\"]+\"[\\s\r\n]+to=\"[^\"]+\"\\s+/>"
+var grr = "<rule\\s+from=\"[^\"]+\"\\s+to=\"[^\"]+\"\\s+/>"
 
 // generic target regex
 var gtr = "<target\\s+host=\"[^\"]+\"\\s+/>"
@@ -24,7 +26,7 @@ var tr = "<rule from=\"^http:\" to=\"https:\" />"
 
 func main() {
 	if len(os.Args) == 1 {
-		fmt.Printf("Usage: %s PATH/https-everywhere PATH/trivialize-whitelist.txt\n", os.Args[0])
+		fmt.Printf("Usage: %s PATH/https-everywhere/rules\n", os.Args[0])
 		os.Exit(1)
 	}
 
@@ -154,6 +156,8 @@ func trivialize_type_2(xmlContent []byte, r ruleset.Ruleset) []byte {
 
 	// rewrite 'target'
 	foo := strings.Split(strings.Replace(from[start:end], "?:", "", -1), "|")
+	sort.Strings(foo)
+
 	for _, bar := range foo {
 		tmp := "<target host=\"" + bar + "." + target + "\" />\n\t"
 		t += tmp
