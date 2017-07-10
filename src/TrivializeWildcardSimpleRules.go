@@ -4,6 +4,7 @@ import (
 	ruleset "./httpse-lib"
 
 	"path/filepath"
+	"sort"
 	"encoding/xml"
 	"regexp"
 	"fmt"
@@ -89,7 +90,12 @@ func main() {
 
 		foo := from[strings.Index(from, "(") + 1:strings.Index(from, ")")]
 
-		for _, bar := range strings.Split(foo, "|") {
+
+		prefix := strings.Split(foo, "|")
+		sort.Strings(prefix)
+
+
+		for _, bar := range prefix {
 			newTarget += ("<target host=\"" + bar + "." + target + "\" />\n\t")
 		}
 
