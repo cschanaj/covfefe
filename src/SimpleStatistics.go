@@ -34,6 +34,9 @@ func main() {
 	// map of 'rule'
 	rmap := make(map[string]int)
 
+	// map of 'securecookie'
+	smap := make(map[string]int)
+
 	// map of 'target'
 	tmap := make(map[string]int)
 
@@ -75,6 +78,18 @@ func main() {
 			}
 		}
 
+		// count 'securecookie'
+		if len(r.SecureCookies) > 0 {
+			for _, sc := range r.SecureCookies {
+				key := sc.Host + sc.Name
+				if _, ok := smap[key]; ok {
+					smap[key]++
+				} else {
+					smap[key] = 1
+				}
+			}
+		}
+
 		// count 'rule'
 		if len(r.Rules) > 0 {
 			for _, rule := range r.Rules {
@@ -109,6 +124,7 @@ func main() {
 	fmt.Printf("| %d, %d ", MyMapSum(dmap), len(dmap))
 	fmt.Printf("| %d, %d ", MyMapSum(tmap), len(tmap))
 	fmt.Printf("| %d, %d ", MyMapSum(rmap), len(rmap))
+	fmt.Printf("| %d, %d ", MyMapSum(smap), len(smap))
 	fmt.Printf("|\n")
 	fmt.Printf("| %d | %d | %d ", pmap["mixedcontent"], pmap["cacert"], pmap["cacert mixedcontent"])
 	fmt.Printf("|\n")
